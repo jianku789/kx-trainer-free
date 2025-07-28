@@ -26,7 +26,13 @@ HackGUI::HackGUI(Hack& hack) : m_hack(hack), m_rebinding_hotkey_id(HotkeyID::NON
         {HotkeyID::TOGGLE_NO_FOG,        "No Fog",          Constants::Hotkeys::KEY_NO_FOG,          HotkeyTriggerType::ON_PRESS, [](Hack& h, bool) { h.toggleFog(!h.IsFogEnabled()); }},
         {HotkeyID::HOLD_SUPER_SPRINT,    "Super Sprint",    Constants::Hotkeys::KEY_SUPER_SPRINT,    HotkeyTriggerType::ON_HOLD,  [](Hack& h, bool held) { h.handleSuperSprint(held); }},
         {HotkeyID::TOGGLE_SPRINT_PREF,   "Sprint",          Constants::Hotkeys::KEY_SPRINT,          HotkeyTriggerType::ON_PRESS, [this](Hack& /*h*/, bool) { this->m_sprintEnabled = !this->m_sprintEnabled; }}, // Toggles the GUI preference flag
-        {HotkeyID::HOLD_FLY,             "Fly",             Constants::Hotkeys::KEY_FLY,             HotkeyTriggerType::ON_HOLD,  [](Hack& h, bool held) { h.handleFly(held); }}
+        {HotkeyID::HOLD_FLY,             "Fly",             Constants::Hotkeys::KEY_FLY,             HotkeyTriggerType::ON_HOLD,  [](Hack& h, bool held) { h.handleFly(held); }},
+        // 多位置加载热键
+        {HotkeyID::LOAD_POS_SLOT_0,      "Load Slot 0",     Constants::Hotkeys::KEY_LOAD_POS_SLOT_0, HotkeyTriggerType::ON_PRESS, [](Hack& h, bool) { h.loadPosition(0); }},
+        {HotkeyID::LOAD_POS_SLOT_1,      "Load Slot 1",     Constants::Hotkeys::KEY_LOAD_POS_SLOT_1, HotkeyTriggerType::ON_PRESS, [](Hack& h, bool) { h.loadPosition(1); }},
+        {HotkeyID::LOAD_POS_SLOT_2,      "Load Slot 2",     Constants::Hotkeys::KEY_LOAD_POS_SLOT_2, HotkeyTriggerType::ON_PRESS, [](Hack& h, bool) { h.loadPosition(2); }},
+        {HotkeyID::LOAD_POS_SLOT_3,      "Load Slot 3",     Constants::Hotkeys::KEY_LOAD_POS_SLOT_3, HotkeyTriggerType::ON_PRESS, [](Hack& h, bool) { h.loadPosition(3); }},
+        {HotkeyID::LOAD_POS_SLOT_4,      "Load Slot 4",     Constants::Hotkeys::KEY_LOAD_POS_SLOT_4, HotkeyTriggerType::ON_PRESS, [](Hack& h, bool) { h.loadPosition(4); }}
     };
 
     // TODO: Load saved currentKeyCode values from a config file here, overwriting the defaults set in HotkeyInfo constructor
@@ -198,10 +204,38 @@ void HackGUI::RenderTogglesSection() {
 // Renders the collapsible section with action buttons
 void HackGUI::RenderActionsSection() {
     if (ImGui::CollapsingHeader("Actions", ImGuiTreeNodeFlags_DefaultOpen)) {
+        // 单位置保存/加载按钮（保持原有功能）
         float button_width = ImGui::GetContentRegionAvail().x * 0.48f; // Approx half width
         if (ImGui::Button("Save Position", ImVec2(button_width, 0))) { m_hack.savePosition(); }
         ImGui::SameLine();
         if (ImGui::Button("Load Position", ImVec2(-1.0f, 0))) { m_hack.loadPosition(); } // Fill remaining
+        
+        // 多位置功能
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Text("Multi-Position Actions");
+        
+        // 位置槽位选择
+        static int selected_slot = 0;
+        ImGui::Text("Slot:");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(100.0f);
+        ImGui::Combo("##PositionSlot", &selected_slot, "0\01\02\03\04\05\06\07\08\09\0");
+        
+        // 显示位置是否有效
+        if (m_hack.isValidPosition(selected_slot)) {
+            ImGui::SameLine();
+            ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Saved");
+        } else {
+            ImGui::SameLine();
+            ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "Empty");
+        }
+        
+        // 多位置保存/加载按钮
+        if (ImGui::Button("Save to Slot", ImVec2(button_width, 0))) { m_hack.savePosition(selected_slot); }
+        ImGui::SameLine();
+        if (ImGui::Button("Load from Slot", ImVec2(-1.0f, 0))) { m_hack.loadPosition(selected_slot); }
+        
         ImGui::Spacing();
     }
 }

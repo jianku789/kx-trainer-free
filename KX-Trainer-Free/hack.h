@@ -7,6 +7,17 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <array>
+
+// 添加位置数据结构
+struct Position {
+    float x = 0.0f;
+    float y = 0.0f;
+    float z = 0.0f;
+    
+    Position() = default;
+    Position(float x, float y, float z) : x(x), y(y), z(z) {}
+};
 
 class HackInitializationError : public std::runtime_error {
 public:
@@ -16,6 +27,8 @@ public:
 
 class Hack {
 public:
+    static const int MAX_POSITIONS = 10; // 支持最多10个位置
+    
     Hack(std::function<void(const std::string&)> statusCallback);
     ~Hack();
     bool Initialize(); // Performs process attachment and initial scans. Returns true on success.
@@ -36,7 +49,13 @@ public:
     // Position saving/loading
     void savePosition();
     void loadPosition();
-
+    
+    // 多位置功能
+    void savePosition(int slot);
+    void loadPosition(int slot);
+    bool isValidPosition(int slot) const;
+    Position getPosition(int slot) const;
+    
     // --- State Getters ---
     bool IsFogEnabled() const;
     bool IsObjectClippingEnabled() const;
@@ -80,6 +99,11 @@ private:
     // Core memory values / state
     float m_xValue = 0.0f, m_yValue = 0.0f, m_zValue = 0.0f;
     float m_xSave = 0.0f, m_ySave = 0.0f, m_zSave = 0.0f;
+    
+    // 多位置支持
+    std::array<Position, MAX_POSITIONS> m_savedPositions;
+    std::array<bool, MAX_POSITIONS> m_validPositions;
+    
     float m_speed = 0.0f, m_savedSpeed = 0.0f;
     float m_invisibilityValue = 0.0f;
     float m_wallClimbValue = 0.0f;

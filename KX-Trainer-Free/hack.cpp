@@ -23,6 +23,11 @@ Hack::Hack(std::function<void(const std::string&)> statusCallback)
 {
     // Initialize only members that don't require process interaction yet.
     initializeOffsets();
+    
+    // 初始化多位置支持
+    for (int i = 0; i < MAX_POSITIONS; ++i) {
+        m_validPositions[i] = false;
+    }
     // Actual process attachment and scanning happens in Initialize()
 }
 
@@ -332,6 +337,60 @@ void Hack::loadPosition() {
     else {
         reportStatus("WARN: No position saved to load.");
     }
+}
+
+// 多位置功能实现
+void Hack::savePosition(int slot) {
+    // 检查slot有效性
+    if (slot < 0 || slot >= MAX_POSITIONS) {
+        reportStatus("ERROR: Invalid position slot " + std::to_string(slot) + ". Valid range is 0-" + std::to_string(MAX_POSITIONS - 1) + ".");
+        return;
+    }
+    
+    readXYZ();
+    m_savedPositions[slot] = Position(m_xValue, m_yValue, m_zValue);
+    m_validPositions[slot] = true;
+    
+    if (m_xAddr != 0 && m_yAddr != 0 && m_zAddr != 0)
+        reportStatus("INFO: Position saved to slot " + std::to_string(slot) + ".");
+    else
+        reportStatus("WARN: Position saved to slot " + std::to_string(slot) + ", but coordinate addresses might be invalid.");
+}
+
+void Hack::loadPosition(int slot) {
+    // 检查slot有效性
+    if (slot < 0 || slot >= MAX_POSITIONS) {
+        reportStatus("ERROR: Invalid position slot " + std::to_string(slot) + ". Valid range is 0-" + std::to_string(MAX_POSITIONS - 1) + ".");
+        return;
+    }
+    
+    // 检查位置是否有效
+    if (!m_validPositions[slot]) {
+        reportStatus("WARN: No position saved in slot " + std::to_string(slot) + ".");
+        return;
+    }
+    
+    if (m_xAddr == 0 || m_yAddr == 0 || m_zAddr == 0) {
+        reportStatus("ERROR: Cannot load position, coordinate addresses not resolved.");
+        return;
+    }
+    
+    writeXYZ(m_savedPositions[slot].x, m_savedPositions[slot].y, m_savedPositions[slot].z);
+    reportStatus("INFO: Position loaded from slot " + std::to_string(slot) + ".");
+}
+
+bool Hack::isValidPosition(int slot) const {
+    if (slot < 0 || slot >= MAX_POSITIONS) {
+        return false;
+    }
+    return m_validPositions[slot];
+}
+
+Position Hack::getPosition(int slot) const {
+    if (slot < 0 || slot >= MAX_POSITIONS) {
+        return Position();
+    }
+    return m_savedPositions[slot];
 }
 
 void Hack::toggleInvisibility(bool enable) {
