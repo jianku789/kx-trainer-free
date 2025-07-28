@@ -18,12 +18,6 @@ enum class HotkeyID {
     HOLD_SUPER_SPRINT,
     TOGGLE_SPRINT_PREF, // Hotkey to toggle the m_sprintEnabled preference flag
     HOLD_FLY,
-    // 多位置加载热键
-    LOAD_POS_SLOT_0,
-    LOAD_POS_SLOT_1,
-    LOAD_POS_SLOT_2,
-    LOAD_POS_SLOT_3,
-    LOAD_POS_SLOT_4
 };
 
 enum class HotkeyTriggerType {

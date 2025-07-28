@@ -60,13 +60,7 @@ namespace Constants {
         constexpr int KEY_SUPER_SPRINT = VK_RSHIFT; // Right Shift
         constexpr int KEY_SPRINT = VK_LSHIFT;       // Left Shift
         constexpr int KEY_FLY = VK_LCONTROL;        // Left Ctrl
-        
-        // 多位置加载热键
-        constexpr int KEY_LOAD_POS_SLOT_0 = VK_F1;  // F1
-        constexpr int KEY_LOAD_POS_SLOT_1 = VK_F2;  // F2
-        constexpr int KEY_LOAD_POS_SLOT_2 = VK_F3;  // F3
-        constexpr int KEY_LOAD_POS_SLOT_3 = VK_F4;  // F4
-        constexpr int KEY_LOAD_POS_SLOT_4 = VK_F11; // F11
+
     }
 
     // Settings

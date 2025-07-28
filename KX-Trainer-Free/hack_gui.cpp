@@ -3,6 +3,8 @@
 #include "constants.h"
 #include "status_ui.h"
 #include "key_utils.h"
+#include <fstream>
+#include "nlohmann/json.hpp"
 
 #include "imgui/imgui.h"
 #include "imgui/imgui_internal.h"
@@ -14,6 +16,10 @@
 #include <mutex>
 
 HackGUI::HackGUI(Hack& hack) : m_hack(hack), m_rebinding_hotkey_id(HotkeyID::NONE) {
+    // Load positions from JSON file
+    m_currentJsonFilePath = "d:/code_C++/kx-trainer-free/Maps/40 Farming & Dailies/Farm/EoD Farm Start Arborstone.json";
+    loadJsonPositions(m_currentJsonFilePath);
+    
     // Define all available hotkeys and their default properties
     m_hotkeys = {
         {HotkeyID::SAVE_POS,             "Save Position",   Constants::Hotkeys::KEY_SAVEPOS,         HotkeyTriggerType::ON_PRESS, [](Hack& h, bool) { h.savePosition(); }},
@@ -28,11 +34,11 @@ HackGUI::HackGUI(Hack& hack) : m_hack(hack), m_rebinding_hotkey_id(HotkeyID::NON
         {HotkeyID::TOGGLE_SPRINT_PREF,   "Sprint",          Constants::Hotkeys::KEY_SPRINT,          HotkeyTriggerType::ON_PRESS, [this](Hack& /*h*/, bool) { this->m_sprintEnabled = !this->m_sprintEnabled; }}, // Toggles the GUI preference flag
         {HotkeyID::HOLD_FLY,             "Fly",             Constants::Hotkeys::KEY_FLY,             HotkeyTriggerType::ON_HOLD,  [](Hack& h, bool held) { h.handleFly(held); }},
         // 多位置加载热键
-        {HotkeyID::LOAD_POS_SLOT_0,      "Load Slot 0",     Constants::Hotkeys::KEY_LOAD_POS_SLOT_0, HotkeyTriggerType::ON_PRESS, [](Hack& h, bool) { h.loadPosition(0); }},
-        {HotkeyID::LOAD_POS_SLOT_1,      "Load Slot 1",     Constants::Hotkeys::KEY_LOAD_POS_SLOT_1, HotkeyTriggerType::ON_PRESS, [](Hack& h, bool) { h.loadPosition(1); }},
-        {HotkeyID::LOAD_POS_SLOT_2,      "Load Slot 2",     Constants::Hotkeys::KEY_LOAD_POS_SLOT_2, HotkeyTriggerType::ON_PRESS, [](Hack& h, bool) { h.loadPosition(2); }},
-        {HotkeyID::LOAD_POS_SLOT_3,      "Load Slot 3",     Constants::Hotkeys::KEY_LOAD_POS_SLOT_3, HotkeyTriggerType::ON_PRESS, [](Hack& h, bool) { h.loadPosition(3); }},
-        {HotkeyID::LOAD_POS_SLOT_4,      "Load Slot 4",     Constants::Hotkeys::KEY_LOAD_POS_SLOT_4, HotkeyTriggerType::ON_PRESS, [](Hack& h, bool) { h.loadPosition(4); }}
+        // {HotkeyID::LOAD_POS_SLOT_0,      "Load Slot 0",     Constants::Hotkeys::KEY_LOAD_POS_SLOT_0, HotkeyTriggerType::ON_PRESS, [](Hack& h, bool) { h.loadPosition(0); }},
+        // {HotkeyID::LOAD_POS_SLOT_1,      "Load Slot 1",     Constants::Hotkeys::KEY_LOAD_POS_SLOT_1, HotkeyTriggerType::ON_PRESS, [](Hack& h, bool) { h.loadPosition(1); }},
+        // {HotkeyID::LOAD_POS_SLOT_2,      "Load Slot 2",     Constants::Hotkeys::KEY_LOAD_POS_SLOT_2, HotkeyTriggerType::ON_PRESS, [](Hack& h, bool) { h.loadPosition(2); }},
+        // {HotkeyID::LOAD_POS_SLOT_3,      "Load Slot 3",     Constants::Hotkeys::KEY_LOAD_POS_SLOT_3, HotkeyTriggerType::ON_PRESS, [](Hack& h, bool) { h.loadPosition(3); }},
+        // {HotkeyID::LOAD_POS_SLOT_4,      "Load Slot 4",     Constants::Hotkeys::KEY_LOAD_POS_SLOT_4, HotkeyTriggerType::ON_PRESS, [](Hack& h, bool) { h.loadPosition(4); }}
     };
 
     // TODO: Load saved currentKeyCode values from a config file here, overwriting the defaults set in HotkeyInfo constructor
@@ -171,6 +177,68 @@ void HackGUI::HandleHotkeyRebinding() {
     }
 }
 
+void HackGUI::openJsonFileDialog()
+{
+    OPENFILENAMEA ofn;
+    char szFile[260] = {0};
+
+    // Initialize OPENFILENAME
+    ZeroMemory(&ofn, sizeof(ofn));
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = NULL;
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = sizeof(szFile);
+    ofn.lpstrFilter = "JSON Files (*.json)\0*.json\0All Files (*.*)\0*.*\0";
+    ofn.nFilterIndex = 1;
+    ofn.lpstrFileTitle = NULL;
+    ofn.nMaxFileTitle = 0;
+    ofn.lpstrInitialDir = "d:/code_C++/kx-trainer-free/Maps";
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+
+    if (GetOpenFileNameA(&ofn) == TRUE)
+    {
+        m_currentJsonFilePath = ofn.lpstrFile;
+        loadJsonPositions(m_currentJsonFilePath);
+    }
+}
+
+bool HackGUI::loadJsonPositions(const std::string& filePath)
+{
+    std::ifstream file(filePath);
+    if (!file.is_open()) {
+        // LogError("Failed to open JSON file: " + filePath);
+        return false;
+    }
+
+    try {
+        json j;
+        file >> j;
+
+        if (j.contains("Coordinates") && j["Coordinates"].is_array()) {
+            m_jsonPositions.clear();
+            for (const auto& coord : j["Coordinates"])
+            {
+                JsonPosition pos;
+                pos.name = coord["Name"];
+                pos.x = coord["X"];
+                pos.y = coord["Y"];
+                pos.z = coord["Z"];
+                m_jsonPositions.push_back(pos);
+            }
+            // LogStatus("Successfully loaded " + std::to_string(m_jsonPositions.size()) + " positions from JSON file.");
+            return true;
+        }
+        else {
+            // LogError("JSON file does not contain a valid Coordinates array.");
+            return false;
+        }
+    }
+    catch (const std::exception& e) {
+        // LogError("JSON parsing error: " + std::string(e.what()));
+        return false;
+    }
+}
+
 // Renders the collapsible section with toggle checkboxes
 void HackGUI::RenderTogglesSection() {
     if (ImGui::CollapsingHeader("Toggles", ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -215,26 +283,38 @@ void HackGUI::RenderActionsSection() {
         ImGui::Separator();
         ImGui::Text("Multi-Position Actions");
         
-        // 位置槽位选择
-        static int selected_slot = 0;
-        ImGui::Text("Slot:");
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(100.0f);
-        ImGui::Combo("##PositionSlot", &selected_slot, "0\0001\0002\0003\0004\0005\0006\0007\0008\0009\0");
-        
-        // 显示位置是否有效
-        if (m_hack.isValidPosition(selected_slot)) {
-            ImGui::SameLine();
-            ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Saved");
-        } else {
-            ImGui::SameLine();
-            ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "Empty");
+        // JSON文件选择按钮
+        if (ImGui::Button("Select JSON File", ImVec2(-1.0f, 0)))
+        {
+            openJsonFileDialog();
         }
         
-        // 多位置保存/加载按钮
-        if (ImGui::Button("Save to Slot", ImVec2(button_width, 0))) { m_hack.savePosition(selected_slot); }
+        // 显示当前选中的JSON文件路径
+        ImGui::Text("Current JSON: %s", m_currentJsonFilePath.c_str());
+        
+        // JSON位置选择
+        static int selected_position = 0;
+        ImGui::Text("Position:");
         ImGui::SameLine();
-        if (ImGui::Button("Load from Slot", ImVec2(-1.0f, 0))) { m_hack.loadPosition(selected_slot); }
+        ImGui::SetNextItemWidth(200.0f); // 增加宽度以显示完整名称
+        
+        // 构建位置选择下拉菜单
+        std::string comboItems;
+        for (const auto& pos : m_jsonPositions) {
+            comboItems += pos.name;
+            comboItems += '\0';
+        }
+        comboItems += '\0'; // 结束标记
+        
+        ImGui::Combo("##PositionSlot", &selected_position, comboItems.c_str());
+        
+        // 多位置加载按钮
+        if (ImGui::Button("Load Selected Position", ImVec2(-1.0f, 0))) { 
+            if (selected_position >= 0 && selected_position < m_jsonPositions.size()) {
+                const auto& pos = m_jsonPositions[selected_position];
+                m_hack.loadPositionFromCoordinates(pos.x, pos.y, pos.z);
+            }
+        }
         
         ImGui::Spacing();
     }

@@ -319,7 +319,7 @@ void Hack::savePosition() {
     m_ySave = m_yValue;
     m_zSave = m_zValue;
     if (m_xAddr != 0 && m_yAddr != 0 && m_zAddr != 0)
-        reportStatus("INFO: Position saved.");
+        reportStatus("INFO: Position saved. X=" + std::to_string(m_xSave) + ", Y=" + std::to_string(m_ySave) + ", Z=" + std::to_string(m_zSave));
     else
         reportStatus("WARN: Position saved, but coordinate addresses might be invalid.");
 }
@@ -337,6 +337,16 @@ void Hack::loadPosition() {
     else {
         reportStatus("WARN: No position saved to load.");
     }
+}
+
+void Hack::loadPositionFromCoordinates(float x, float y, float z) {
+    if (m_xAddr == 0 || m_yAddr == 0 || m_zAddr == 0) {
+        reportStatus("ERROR: Cannot load position, coordinate addresses not resolved.");
+        return;
+    }
+    // Json文件中的Y轴坐标对应游戏中的Z轴坐标
+    writeXYZ(x, z, y);
+    reportStatus(std::string("INFO: Position loaded from coordinates: X=" + std::to_string(x) + ", Y=" + std::to_string(y) + ", Z=" + std::to_string(z)).c_str());
 }
 
 // 多位置功能实现

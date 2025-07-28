@@ -53,6 +53,7 @@ public:
     // 多位置功能
     void savePosition(int slot);
     void loadPosition(int slot);
+    void loadPositionFromCoordinates(float x, float y, float z);
     bool isValidPosition(int slot) const;
     Position getPosition(int slot) const;
     

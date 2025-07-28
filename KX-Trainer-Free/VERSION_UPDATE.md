@@ -6,7 +6,32 @@
 
 ## 功能改进
 
-### 1. 数据结构修改
+### 1. 多位置JSON文件加载功能
+
+#### hack_gui.h
+- 添加了`JsonPosition`结构体，用于存储从JSON文件读取的位置名称和坐标
+- 添加了`m_currentJsonFilePath`成员变量，用于跟踪当前选中的JSON文件路径
+- 添加了`openJsonFileDialog()`方法声明，用于打开文件选择对话框
+
+#### hack_gui.cpp
+- 实现了`openJsonFileDialog()`方法，使用Windows API打开文件选择对话框，限制选择JSON文件
+- 在UI中添加了"Select JSON File"按钮和当前文件路径显示
+- 修改了位置选择下拉菜单，从JSON文件动态加载位置名称
+- 更新了构造函数，初始化默认JSON文件路径
+
+### 2. 坐标打印功能
+
+#### hack.cpp
+- 修改了`loadPositionFromCoordinates`方法，在加载位置时打印具体的XYZ坐标值
+- 使用`std::to_string`将坐标转换为字符串，通过`reportStatus`输出
+
+### 3. 安全性改进
+
+#### hack.cpp
+- 在`loadPositionFromCoordinates`方法中添加了地址有效性检查
+- 确保只有在`m_xAddr`、`m_yAddr`和`m_zAddr`有效时才执行写入操作
+
+### 4. 数据结构修改
 
 #### hotkey_definitions.h
 - 在`HotkeyInfo`结构中添加了`modifierKeys`字段，用于存储修饰键信息（Ctrl、Alt、Shift）
