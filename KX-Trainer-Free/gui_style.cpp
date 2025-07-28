@@ -2,60 +2,60 @@
 
 #include "gui_style.h"
 #include "imgui/imgui.h"
-#include <algorithm> // Required for std::min/max
+#include <algorithm> // std::min/max所需
 
-// Headers needed for font loading
+// 字体加载所需的头文件
 #include <windows.h>
 #include <string>
-#include <ShlObj.h>       // For SHGetFolderPath
-#pragma comment(lib, "Shell32.lib") // Link Shell32.lib
+#include <ShlObj.h>       // SHGetFolderPath所需
+#pragma comment(lib, "Shell32.lib") // 链接Shell32.lib
 
 namespace GUIStyle {
 
-    // Helper function to convert RGB to ImVec4 (alpha defaults to 1.0f)
+    // 辅助函数，将RGB转换为ImVec4（alpha默认为1.0f）
     inline ImVec4 RgbToVec4(int r, int g, int b) {
         return ImVec4(static_cast<float>(r) / 255.0f, static_cast<float>(g) / 255.0f, static_cast<float>(b) / 255.0f, 1.0f);
     }
 
-    // Gets the system Fonts directory path
+    // 获取系统字体目录路径
     std::string GetSystemFontsPath() {
         char fontsPath[MAX_PATH];
         if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_FONTS, NULL, 0, fontsPath))) {
             return std::string(fontsPath);
         }
-        return ""; // Return empty string on failure
+        return ""; // 失败时返回空字符串
     }
 
-    // Loads the primary application font (Bahnschrift).
-    // Should be called after ImGui::CreateContext() and before renderer init.
-    // Returns true if custom font was loaded successfully, false otherwise.
+    // 加载主要应用程序字体（Bahnschrift）
+    // 应在ImGui::CreateContext()之后和渲染器初始化之前调用
+    // 如果自定义字体加载成功则返回true，否则返回false
     bool LoadAppFont(float fontSize) {
         ImGuiIO& io = ImGui::GetIO();
         bool success = false;
 
-        // Add default font first as a fallback
+        // 首先添加默认字体作为后备
         io.Fonts->AddFontDefault();
 
         std::string fontsDir = GetSystemFontsPath();
         if (!fontsDir.empty()) {
-            std::string fontPath = fontsDir + "\\bahnschrift.ttf"; // Use Bahnschrift
+            std::string fontPath = fontsDir + "\\bahnschrift.ttf"; // 使用Bahnschrift
 
             ImFont* customFont = io.Fonts->AddFontFromFileTTF(fontPath.c_str(), fontSize);
 
             if (customFont) {
-                // Set the loaded font as the default for ImGui to use.
+                // 将加载的字体设置为ImGui使用的默认字体
                 io.FontDefault = customFont;
                 success = true;
             }
             else {
-                // Log or notify if Bahnschrift isn't found (it's not on all Windows versions)
-                MessageBoxA(NULL, ("Failed to load Bahnschrift font from: " + fontPath + ". Using default.").c_str(), "Font Warning", MB_OK | MB_ICONWARNING);
-                // Fallback to default font is already handled by AddFontDefault()
+                // 如果未找到Bahnschrift则记录或通知（并非所有Windows版本都有）
+                MessageBoxA(NULL, ("无法从以下位置加载Bahnschrift字体: " + fontPath + ". 使用默认字体.").c_str(), "字体警告", MB_OK | MB_ICONWARNING);
+                // 后备到默认字体已由AddFontDefault()处理
             }
         }
         else {
-            MessageBoxA(NULL, "Could not determine System Fonts directory path!", "Font Error", MB_OK | MB_ICONERROR);
-            // Fallback handled
+            MessageBoxA(NULL, "无法确定系统字体目录路径!", "字体错误", MB_OK | MB_ICONERROR);
+            // 后备处理
         }
         return success;
     }
@@ -64,7 +64,7 @@ namespace GUIStyle {
         ImGuiStyle& style = ImGui::GetStyle();
         ImVec4* colors = style.Colors;
 
-        // Define Palette Colors
+        // 定义调色板颜色
         const ImVec4 richBlack = RgbToVec4(17, 19, 37);   // #111325
         const ImVec4 oxfordBlue = RgbToVec4(26, 31, 52);   // #1a1f34
         const ImVec4 spaceCadet = RgbToVec4(37, 43, 69);   // #252b45
@@ -73,7 +73,7 @@ namespace GUIStyle {
         const ImVec4 azure = RgbToVec4(51, 129, 255); // #3381ff
         const ImVec4 aliceBlue = RgbToVec4(229, 236, 244);// #e5ecf4
 
-        // Calculate derived colors
+        // 计算派生颜色
         ImVec4 spaceCadetHover = ImVec4(
             std::min(spaceCadet.x * 1.3f, 1.0f),
             std::min(spaceCadet.y * 1.3f, 1.0f),
@@ -94,7 +94,7 @@ namespace GUIStyle {
         );
 
 
-        // Layout & Rounding
+        // 布局和圆角
         style.WindowPadding = ImVec2(8.0f, 8.0f);
         style.FramePadding = ImVec2(5.0f, 4.0f);
         style.ItemSpacing = ImVec2(6.0f, 4.0f);
@@ -108,7 +108,7 @@ namespace GUIStyle {
         style.GrabRounding = 3.0f;
         style.TabRounding = 4.0f;
 
-        // Apply Colors (Minimal Transparency)
+        // 应用颜色（最小透明度）
         colors[ImGuiCol_Text] = aliceBlue;
         colors[ImGuiCol_TextDisabled] = coolGray;
         colors[ImGuiCol_WindowBg] = richBlack;
@@ -139,7 +139,7 @@ namespace GUIStyle {
         colors[ImGuiCol_Separator] = spaceCadet;
         colors[ImGuiCol_SeparatorHovered] = azure;
         colors[ImGuiCol_SeparatorActive] = neonBlue;
-        colors[ImGuiCol_ResizeGrip] = ImVec4(coolGray.x, coolGray.y, coolGray.z, 0.5f); // Keep grip subtle
+        colors[ImGuiCol_ResizeGrip] = ImVec4(coolGray.x, coolGray.y, coolGray.z, 0.5f); // 保持抓手微妙
         colors[ImGuiCol_ResizeGripHovered] = coolGray;
         colors[ImGuiCol_ResizeGripActive] = neonBlue;
         colors[ImGuiCol_Tab] = oxfordBlue;
@@ -147,7 +147,7 @@ namespace GUIStyle {
         colors[ImGuiCol_TabActive] = neonBlue;
         colors[ImGuiCol_TabUnfocused] = ImVec4(oxfordBlue.x, oxfordBlue.y, oxfordBlue.z, 0.8f);
         colors[ImGuiCol_TabUnfocusedActive] = ImVec4(neonBlue.x, neonBlue.y, neonBlue.z, 0.6f);
-        colors[ImGuiCol_DockingPreview] = ImVec4(coolGray.x, coolGray.y, coolGray.z, 0.7f); // Use gray for preview
+        colors[ImGuiCol_DockingPreview] = ImVec4(coolGray.x, coolGray.y, coolGray.z, 0.7f); // 预览使用灰色
         colors[ImGuiCol_DockingEmptyBg] = ImVec4(0.15f, 0.15f, 0.15f, 1.0f);
         colors[ImGuiCol_PlotLines] = coolGray;
         colors[ImGuiCol_PlotLinesHovered] = azure;
@@ -156,9 +156,9 @@ namespace GUIStyle {
         colors[ImGuiCol_TableHeaderBg] = oxfordBlue;
         colors[ImGuiCol_TableBorderStrong] = spaceCadet;
         colors[ImGuiCol_TableBorderLight] = ImVec4(spaceCadet.x, spaceCadet.y, spaceCadet.z, 0.6f);
-        colors[ImGuiCol_TableRowBg] = ImVec4(0.0f, 0.0f, 0.0f, 0.0f); // Transparent
-        colors[ImGuiCol_TableRowBgAlt] = ImVec4(aliceBlue.x, aliceBlue.y, aliceBlue.z, 0.07f); // Subtle alternating background
-        colors[ImGuiCol_TextSelectedBg] = ImVec4(azure.x, azure.y, azure.z, 0.40f); // Keep selection semi-transparent
+        colors[ImGuiCol_TableRowBg] = ImVec4(0.0f, 0.0f, 0.0f, 0.0f); // 透明
+        colors[ImGuiCol_TableRowBgAlt] = ImVec4(aliceBlue.x, aliceBlue.y, aliceBlue.z, 0.07f); // 微妙的交替背景
+        colors[ImGuiCol_TextSelectedBg] = ImVec4(azure.x, azure.y, azure.z, 0.40f); // 保持选择半透明
         colors[ImGuiCol_DragDropTarget] = ImVec4(neonBlue.x, neonBlue.y, neonBlue.z, 0.95f);
         colors[ImGuiCol_NavHighlight] = azure;
         colors[ImGuiCol_NavWindowingHighlight] = aliceBlue;
@@ -166,12 +166,12 @@ namespace GUIStyle {
         colors[ImGuiCol_ModalWindowDimBg] = ImVec4(richBlack.x, richBlack.y, richBlack.z, 0.75f);
 
 
-        // Ensure viewport windows are opaque and non-rounded if enabled
+        // 如果启用，确保视口窗口不透明且无圆角
         ImGuiIO& io = ImGui::GetIO();
         if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
             style.WindowRounding = 0.0f;
-            style.ChildRounding = 0.0f; // Also apply to child windows with viewports
-            style.PopupRounding = 0.0f; // Also apply to popups with viewports
+            style.ChildRounding = 0.0f; // 也应用于带视口的子窗口
+            style.PopupRounding = 0.0f; // 也应用于带视口的弹出窗口
             style.Colors[ImGuiCol_WindowBg].w = 1.0f;
         }
     }

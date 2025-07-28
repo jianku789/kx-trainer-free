@@ -3,30 +3,30 @@
 #include <windows.h>
 
 namespace Constants {
-    // Application Info
+    // 应用程序信息
     constexpr int APP_VERSION = 20100;
     constexpr char APP_NAME[] = "KX Trainer";
     constexpr char API_URL[] = "https://kxtools.xyz/api/v1/version/kx-trainer-free";
 
-    // Process
+    // 进程
     namespace Process {
         constexpr wchar_t* GW2_PROCESS_NAME_W = L"Gw2-64.exe";
         constexpr const char* GW2_PROCESS_NAME_A = "Gw2-64.exe";
     }
 
-    // Scan Configuration
+    // 扫描配置
     namespace Scan {
-        // Minimum expected value for a valid user-space pointer in x64. Used as a sanity check.
+        // x64中有效用户空间指针的最小预期值，用作完整性检查
         constexpr uintptr_t BASE_ADDRESS_MIN_VALUE = 0x10000;
 
-        // Offset relative to the pattern match address to find the location of the base pointer.
+        // 相对于模式匹配地址的偏移量，用于找到基指针的位置
         constexpr uintptr_t POINTER_LOCATION_OFFSET = 0x8;
 
         constexpr int MAX_BASE_SCAN_ATTEMPTS = 15;
         constexpr int BASE_SCAN_RETRY_DELAY_MS = 1000;
     }
 
-    // Patterns and Masks
+    // 模式和掩码
     namespace Patterns {
         static inline char BASE_SCAN_PATTERN[] = "\x01\x00\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x08\x00\x00\x00\x00\x00\x00\x00\x01";
         static inline char BASE_SCAN_MASK[] = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
@@ -38,7 +38,7 @@ namespace Constants {
         static inline char FULL_STRAFE_MASK[] = "x??xxx?xxx";
     }
 
-    // Offsets
+    // 偏移量
     namespace Offsets {
         constexpr unsigned int BYTE1 = 0x50;
         constexpr unsigned int BYTE2 = 0x88;
@@ -46,9 +46,9 @@ namespace Constants {
         constexpr unsigned int BYTE4 = 0x68;
     }
 
-    // Hotkeys
+    // 热键
     namespace Hotkeys {
-        // Recommended Default Bindings
+        // 推荐的默认绑定
         constexpr int KEY_SAVEPOS = VK_F5;          // F5
         constexpr int KEY_LOADPOS = VK_F6;          // F6
         constexpr int KEY_INVISIBILITY = VK_F7;     // F7
@@ -69,24 +69,24 @@ namespace Constants {
         constexpr int KEY_LOAD_POS_SLOT_4 = VK_F11; // F11
     }
 
-    // Settings
+    // 设置
     namespace Settings {
-        constexpr float SPRINT_SPEED = 12.22f;
-        constexpr float NORMAL_SPEED = 9.1875f;
-        constexpr float SUPER_SPRINT_SPEED = 30.0f;
-        constexpr float FLY_SPEED = 20.0f;
-        constexpr float FLY_NORMAL_SPEED = -40.625f;
-        constexpr float WALLCLIMB_SPEED = 20.0f;
-        constexpr float WALLCLIMB_NORMAL_SPEED = 2.1875f;
-        constexpr byte OBJECT_CLIPPING_ON = 0xDB;  // xmm3
-        constexpr byte OBJECT_CLIPPING_OFF = 0xD3; // xmm2
-        constexpr float INVISIBILITY_ON = 2.7f;
-        constexpr float INVISIBILITY_OFF = 1.0f;
-        constexpr float CLIPPING_ON = 99999.0f;
-        constexpr float CLIPPING_OFF = 0.0f;
-        constexpr byte FULL_STRAFE_ON = 0x75;  // Jne
-        constexpr byte FULL_STRAFE_OFF = 0x0F;  // Movaps
-        constexpr byte NO_FOG_ON = 0x54;  // xmm2
-        constexpr byte NO_FOG_OFF = 0x5C;  // xmm3
+        constexpr float SPRINT_SPEED = 12.22f;                     // 冲刺速度
+        constexpr float NORMAL_SPEED = 9.1875f;                    // 正常速度
+        constexpr float SUPER_SPRINT_SPEED = 30.0f;                // 超级冲刺速度
+        constexpr float FLY_SPEED = 20.0f;                         // 飞行速度
+        constexpr float FLY_NORMAL_SPEED = -40.625f;               // 飞行下降速度
+        constexpr float WALLCLIMB_SPEED = 20.0f;                   // 墙壁攀爬速度
+        constexpr float WALLCLIMB_NORMAL_SPEED = 2.1875f;          // 墙壁攀爬正常速度
+        constexpr byte OBJECT_CLIPPING_ON = 0xDB;                  // 对象碰撞检测开启
+        constexpr byte OBJECT_CLIPPING_OFF = 0xD3;                 // 对象碰撞检测关闭
+        constexpr float INVISIBILITY_ON = 2.7f;                    // 隐身开启值
+        constexpr float INVISIBILITY_OFF = 1.0f;                   // 隐身关闭值
+        constexpr float CLIPPING_ON = 99999.0f;                    // 碰撞检测开启值
+        constexpr float CLIPPING_OFF = 0.0f;                       // 碰撞检测关闭值
+        constexpr byte FULL_STRAFE_ON = 0x75;                      // 全方向扫射开启
+        constexpr byte FULL_STRAFE_OFF = 0x0F;                     // 全方向扫射关闭
+        constexpr byte NO_FOG_ON = 0x54;                           // 无雾效果开启
+        constexpr byte NO_FOG_OFF = 0x5C;                          // 无雾效果关闭
     }
 }

@@ -6,16 +6,16 @@
 
 namespace D3DManager {
 
-    // Initializes the D3D device, context, and swap chain for the given window.
+    // 为给定窗口初始化D3D设备、上下文和交换链
     bool Initialize(HWND hWnd);
 
-    // Cleans up all D3D resources.
+    // 清理所有D3D资源
     void Shutdown();
 
-    // Handles window resizing for the swap chain and render target.
+    // 处理交换链和渲染目标的窗口大小调整
     void HandleResize(UINT width, UINT height);
 
-    // Accessors for core D3D objects.
+    // 核心D3D对象的访问器
     ID3D11Device* GetDevice();
     ID3D11DeviceContext* GetDeviceContext();
     IDXGISwapChain* GetSwapChain();

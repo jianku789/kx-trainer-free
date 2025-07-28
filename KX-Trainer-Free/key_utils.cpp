@@ -2,13 +2,13 @@
 
 #include <windows.h>
 #include <map>
-#include <cstdio> // For snprintf
+#include <cstdio> // 用于snprintf
 
-// Returns a human-readable string representation of a Windows virtual key code.
+// 返回Windows虚拟键码的可读字符串表示
 const char* GetKeyName(int vk_code) {
     if (vk_code == 0) { return "None"; }
 
-    // Static map for efficiency and lookup
+    // 静态映射表，用于提高效率和查找速度
     static std::map<int, const char*> keyNames = {
         {VK_LBUTTON, "LMouse"}, {VK_RBUTTON, "RMouse"}, {VK_MBUTTON, "MMouse"},
         {VK_BACK, "Backspace"}, {VK_TAB, "Tab"}, {VK_RETURN, "Enter"}, {VK_SHIFT, "Shift"},
@@ -40,7 +40,7 @@ const char* GetKeyName(int vk_code) {
         return it->second;
     }
 
-    // Fallback for unknown keys
+    // 未知键码的回退处理
     static char unknownKey[32];
     snprintf(unknownKey, sizeof(unknownKey), "VK 0x%02X", vk_code);
     return unknownKey;

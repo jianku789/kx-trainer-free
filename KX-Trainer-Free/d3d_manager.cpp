@@ -1,17 +1,17 @@
 #include "d3d_manager.h"
 #include <dxgi.h>
-#include <cstdio> // For error logging during init failure
+#include <cstdio> // 用于初始化失败时的错误日志记录
 
 namespace D3DManager {
 
-    // Internal state
+    // 内部状态
     static ID3D11Device* g_pd3dDevice = nullptr;
     static ID3D11DeviceContext* g_pd3dDeviceContext = nullptr;
     static IDXGISwapChain* g_pSwapChain = nullptr;
     static ID3D11RenderTargetView* g_mainRenderTargetView = nullptr;
     static HWND                     g_hWnd = nullptr;
 
-    // Forward declarations
+    // 前向声明
     static void CreateRenderTargetInternal();
     static void CleanupRenderTargetInternal();
 
@@ -21,11 +21,11 @@ namespace D3DManager {
 
         DXGI_SWAP_CHAIN_DESC sd;
         ZeroMemory(&sd, sizeof(sd));
-        sd.BufferCount = 2; // Use 2 for flip model
+        sd.BufferCount = 2; // 使用2个缓冲区用于翻转模式
 
         RECT rc;
         ::GetClientRect(hWnd, &rc);
-        // Ensure width/height are at least 1
+        // 确保宽度/高度至少为1
         sd.BufferDesc.Width = (rc.right - rc.left > 0) ? (rc.right - rc.left) : 1;
         sd.BufferDesc.Height = (rc.bottom - rc.top > 0) ? (rc.bottom - rc.top) : 1;
 
@@ -37,12 +37,12 @@ namespace D3DManager {
         sd.SampleDesc.Count = 1;
         sd.SampleDesc.Quality = 0;
         sd.Windowed = TRUE;
-        sd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD; // Recommended modern swap effect
+        sd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD; // 推荐的现代交换效果
         sd.Flags = 0;
 
         UINT createDeviceFlags = 0;
 #ifdef _DEBUG
-        //createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG; // Enable if D3D debug layer is installed and needed
+        //createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG; // 如果安装并需要D3D调试层则启用
 #endif
 
         D3D_FEATURE_LEVEL featureLevel;
@@ -53,18 +53,18 @@ namespace D3DManager {
             D3D11_SDK_VERSION, &sd, &g_pSwapChain, &g_pd3dDevice,
             &featureLevel, &g_pd3dDeviceContext);
 
-        // Fallback to WARP driver if hardware fails
+        // 如果硬件失败则回退到WARP驱动
         if (FAILED(res)) {
-            fprintf(stderr, "D3D11CreateDeviceAndSwapChain (Hardware) failed: 0x%lx\n", res);
+            fprintf(stderr, "D3D11CreateDeviceAndSwapChain (硬件) 失败: 0x%lx\n", res);
             res = D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_WARP, nullptr, createDeviceFlags,
                 featureLevelArray, ARRAYSIZE(featureLevelArray), D3D11_SDK_VERSION,
                 &sd, &g_pSwapChain, &g_pd3dDevice, &featureLevel, &g_pd3dDeviceContext);
             if (FAILED(res)) {
-                fprintf(stderr, "D3D11CreateDeviceAndSwapChain (WARP) failed: 0x%lx\n", res);
+                fprintf(stderr, "D3D11CreateDeviceAndSwapChain (WARP) 失败: 0x%lx\n", res);
                 Shutdown();
                 return false;
             }
-            fprintf(stderr, "Using WARP (Software) D3D11 Driver.\n");
+            fprintf(stderr, "使用WARP (软件) D3D11驱动.\n");
         }
 
         CreateRenderTargetInternal();
@@ -74,7 +74,7 @@ namespace D3DManager {
     void Shutdown() {
         CleanupRenderTargetInternal();
         if (g_pSwapChain) {
-            g_pSwapChain->SetFullscreenState(FALSE, NULL); // Ensure windowed before release
+            g_pSwapChain->SetFullscreenState(FALSE, NULL); // 在释放前确保窗口模式
             g_pSwapChain->Release();
             g_pSwapChain = nullptr;
         }
@@ -93,15 +93,15 @@ namespace D3DManager {
 
     void HandleResize(UINT width, UINT height) {
         if (!g_pSwapChain || width == 0 || height == 0) {
-            return; // Cannot resize if invalid
+            return; // 如果无效则无法调整大小
         }
 
-        CleanupRenderTargetInternal(); // Release existing RTV
+        CleanupRenderTargetInternal(); // 释放现有的RTV
 
         HRESULT hr = g_pSwapChain->ResizeBuffers(0, width, height, DXGI_FORMAT_UNKNOWN, 0);
         if (FAILED(hr)) {
-            fprintf(stderr, "Error resizing swap chain buffers: 0x%lx\n", hr);
-            // Consider more robust error handling / reinitialization if required
+            fprintf(stderr, "调整交换链缓冲区大小时出错: 0x%lx\n", hr);
+            // 如果需要，考虑更强大的错误处理/重新初始化
             return;
         }
 
@@ -115,14 +115,14 @@ namespace D3DManager {
         HRESULT hr = g_pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
         if (SUCCEEDED(hr)) {
             hr = g_pd3dDevice->CreateRenderTargetView(pBackBuffer, nullptr, &g_mainRenderTargetView);
-            pBackBuffer->Release(); // RTV holds its own reference
+            pBackBuffer->Release(); // RTV持有自己的引用
             if (FAILED(hr)) {
-                fprintf(stderr, "Error creating render target view: 0x%lx\n", hr);
+                fprintf(stderr, "创建渲染目标视图时出错: 0x%lx\n", hr);
                 g_mainRenderTargetView = nullptr;
             }
         }
         else {
-            fprintf(stderr, "Error getting swap chain buffer: 0x%lx\n", hr);
+            fprintf(stderr, "获取交换链缓冲区时出错: 0x%lx\n", hr);
         }
     }
 
@@ -131,15 +131,15 @@ namespace D3DManager {
             g_mainRenderTargetView->Release();
             g_mainRenderTargetView = nullptr;
         }
-        // Ensure the context doesn't have the RTV bound anymore
+        // 确保上下文不再绑定RTV
         if (g_pd3dDeviceContext) {
             ID3D11RenderTargetView* nullRTV = nullptr;
             g_pd3dDeviceContext->OMSetRenderTargets(1, &nullRTV, nullptr);
-            g_pd3dDeviceContext->Flush(); // Ensure command execution
+            g_pd3dDeviceContext->Flush(); // 确保命令执行
         }
     }
 
-    // --- Getters ---
+    // --- 获取器 ---
     ID3D11Device* GetDevice() { return g_pd3dDevice; }
     ID3D11DeviceContext* GetDeviceContext() { return g_pd3dDeviceContext; }
     IDXGISwapChain* GetSwapChain() { return g_pSwapChain; }

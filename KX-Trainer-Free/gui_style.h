@@ -3,10 +3,10 @@
 
 namespace GUIStyle {
 
-    // Applies a custom visual style and color theme to ImGui.
+    // 将自定义视觉样式和颜色主题应用于ImGui
     void ApplyCustomStyle();
 
-    // Loads the primary application font
+    // 加载主要应用程序字体
     bool LoadAppFont(float fontSize = 16.0f);
 
 } // namespace GUIStyle
