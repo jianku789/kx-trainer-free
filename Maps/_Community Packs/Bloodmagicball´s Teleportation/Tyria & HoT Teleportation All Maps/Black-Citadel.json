@@ -1,0 +1,23 @@
+{
+  "Name": "Black-Citadel",
+  "Coordinates": [
+    {
+      "Name": "BlackCitadel-to-PlainsofAshford",
+      "X": 548.61,
+      "Y": 278.4,
+      "Z": 160.7
+    },
+    {
+      "Name": "BlackCitadel-to-Diessa",
+      "X": -13.79,
+      "Y": 679.65,
+      "Z": 171.67
+    },
+    {
+      "Name": "BlackCitadel-to-LionsArch",
+      "X": -202.82,
+      "Y": 400.3,
+      "Z": 215.75
+    }
+  ]
+}

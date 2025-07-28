@@ -220,7 +220,7 @@ void HackGUI::RenderActionsSection() {
         ImGui::Text("Slot:");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(100.0f);
-        ImGui::Combo("##PositionSlot", &selected_slot, "0\01\02\03\04\05\06\07\08\09\0");
+        ImGui::Combo("##PositionSlot", &selected_slot, "0\0001\0002\0003\0004\0005\0006\0007\0008\0009\0");
         
         // 显示位置是否有效
         if (m_hack.isValidPosition(selected_slot)) {
