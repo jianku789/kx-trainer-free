@@ -18,6 +18,8 @@ enum class HotkeyID {
     HOLD_SUPER_SPRINT,
     TOGGLE_SPRINT_PREF, // Hotkey to toggle the m_sprintEnabled preference flag
     HOLD_FLY,
+    LOAD_NEXT_POSITION,
+    LOAD_PREVIOUS_POSITION,
 };
 
 enum class HotkeyTriggerType {

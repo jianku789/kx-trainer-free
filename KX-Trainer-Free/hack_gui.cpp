@@ -34,6 +34,8 @@ HackGUI::HackGUI(Hack& hack) : m_hack(hack), m_rebinding_hotkey_id(HotkeyID::NON
         {HotkeyID::TOGGLE_SPRINT_PREF,   "Sprint",          Constants::Hotkeys::KEY_SPRINT,          HotkeyTriggerType::ON_PRESS, [this](Hack& /*h*/, bool) { this->m_sprintEnabled = !this->m_sprintEnabled; }}, // Toggles the GUI preference flag
         {HotkeyID::HOLD_FLY,             "Fly",             Constants::Hotkeys::KEY_FLY,             HotkeyTriggerType::ON_HOLD,  [](Hack& h, bool held) { h.handleFly(held); }},
         // 多位置加载热键
+        {HotkeyID::LOAD_NEXT_POSITION,   "Next Position",    Constants::Hotkeys::KEY_NEXT_POSITION,    HotkeyTriggerType::ON_PRESS, [this](Hack& /*h*/, bool) { this->loadNextPosition(); }},
+        {HotkeyID::LOAD_PREVIOUS_POSITION, "Previous Position", Constants::Hotkeys::KEY_PREVIOUS_POSITION, HotkeyTriggerType::ON_PRESS, [this](Hack& /*h*/, bool) { this->loadPreviousPosition(); }}
         // {HotkeyID::LOAD_POS_SLOT_0,      "Load Slot 0",     Constants::Hotkeys::KEY_LOAD_POS_SLOT_0, HotkeyTriggerType::ON_PRESS, [](Hack& h, bool) { h.loadPosition(0); }},
         // {HotkeyID::LOAD_POS_SLOT_1,      "Load Slot 1",     Constants::Hotkeys::KEY_LOAD_POS_SLOT_1, HotkeyTriggerType::ON_PRESS, [](Hack& h, bool) { h.loadPosition(1); }},
         // {HotkeyID::LOAD_POS_SLOT_2,      "Load Slot 2",     Constants::Hotkeys::KEY_LOAD_POS_SLOT_2, HotkeyTriggerType::ON_PRESS, [](Hack& h, bool) { h.loadPosition(2); }},
@@ -198,9 +200,45 @@ void HackGUI::openJsonFileDialog()
     if (GetOpenFileNameA(&ofn) == TRUE)
     {
         m_currentJsonFilePath = ofn.lpstrFile;
+        m_selectedPositionIndex = 0; // Reset position index when loading new file
         loadJsonPositions(m_currentJsonFilePath);
     }
 }
+
+void HackGUI::loadNextPosition()
+{
+    if (m_jsonPositions.empty())
+    {
+        return;
+    }
+
+    // 否则按正常逻辑加载下一个位置
+    if (m_selectedPositionIndex < static_cast<int>(m_jsonPositions.size()) - 1) {
+        m_selectedPositionIndex++;
+        const auto& pos = m_jsonPositions[m_selectedPositionIndex];
+        m_hack.loadPositionFromCoordinates(pos.x, pos.y, pos.z);
+    }
+}
+
+void HackGUI::loadPreviousPosition()
+ {
+     if (m_jsonPositions.empty())
+     {
+         return;
+     }
+     if (m_selectedPositionIndex == 0) {
+        const auto& pos = m_jsonPositions[m_selectedPositionIndex];
+         m_hack.loadPositionFromCoordinates(pos.x, pos.y, pos.z);
+        return;
+     }
+
+     // 不循环到最后一个位置
+     if (m_selectedPositionIndex > 0) {
+         m_selectedPositionIndex--;
+         const auto& pos = m_jsonPositions[m_selectedPositionIndex];
+         m_hack.loadPositionFromCoordinates(pos.x, pos.y, pos.z);
+     }
+ }
 
 bool HackGUI::loadJsonPositions(const std::string& filePath)
 {
@@ -293,27 +331,47 @@ void HackGUI::RenderActionsSection() {
         ImGui::Text("Current JSON: %s", m_currentJsonFilePath.c_str());
         
         // JSON位置选择
-        static int selected_position = 0;
         ImGui::Text("Position:");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(200.0f); // 增加宽度以显示完整名称
         
         // 构建位置选择下拉菜单
         std::string comboItems;
-        for (const auto& pos : m_jsonPositions) {
-            comboItems += pos.name;
+        for (size_t i = 0; i < m_jsonPositions.size(); ++i) {
+            const auto& pos = m_jsonPositions[i];
+            std::string displayName = pos.name;
+            if (displayName.empty()) {
+                displayName = "[Unnamed Position " + std::to_string(i) + "]";
+            }
+            comboItems += displayName;
             comboItems += '\0';
         }
         comboItems += '\0'; // 结束标记
         
-        ImGui::Combo("##PositionSlot", &selected_position, comboItems.c_str());
+        ImGui::Combo("##PositionSlot", &m_selectedPositionIndex, comboItems.c_str());
         
         // 多位置加载按钮
-        if (ImGui::Button("Load Selected Position", ImVec2(-1.0f, 0))) { 
-            if (selected_position >= 0 && selected_position < m_jsonPositions.size()) {
-                const auto& pos = m_jsonPositions[selected_position];
+        if (ImGui::Button("Load Selected Position", ImVec2(-150.0f, 0))) { 
+            if (m_selectedPositionIndex >= 0 && m_selectedPositionIndex < m_jsonPositions.size()) {
+                const auto& pos = m_jsonPositions[m_selectedPositionIndex];
                 m_hack.loadPositionFromCoordinates(pos.x, pos.y, pos.z);
             }
+        }
+        
+        // 上一个/下一个位置按钮
+        ImGui::SameLine();
+        if (ImGui::Button("Previous", ImVec2(70.0f, 0))) {
+            loadPreviousPosition();
+        }
+        
+        ImGui::SameLine();
+        if (ImGui::Button("Next", ImVec2(70.0f, 0))) {
+            loadNextPosition();
+        }
+        
+        // 显示当前加载位置的名称
+        if (m_selectedPositionIndex >= 0 && m_selectedPositionIndex < static_cast<int>(m_jsonPositions.size())) {
+            ImGui::Text("Current Position: %s", m_jsonPositions[m_selectedPositionIndex].name.c_str());
         }
         
         ImGui::Spacing();

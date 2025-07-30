@@ -105,6 +105,9 @@ private:
     std::array<Position, MAX_POSITIONS> m_savedPositions;
     std::array<bool, MAX_POSITIONS> m_validPositions;
     
+    // 当前选中的JSON位置索引
+    int m_selectedPositionIndex = 0;
+    
     float m_speed = 0.0f, m_savedSpeed = 0.0f;
     float m_invisibilityValue = 0.0f;
     float m_wallClimbValue = 0.0f;

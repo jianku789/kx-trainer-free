@@ -33,8 +33,11 @@ private:
     HotkeyID m_rebinding_hotkey_id = HotkeyID::NONE; // ID of the hotkey currently being rebound
     std::vector<JsonPosition> m_jsonPositions; // Stores positions loaded from JSON file
     std::string m_currentJsonFilePath; // Current selected JSON file path
+    int m_selectedPositionIndex = 0; // Current selected position index
     bool loadJsonPositions(const std::string& filePath); // Loads positions from JSON file
     void openJsonFileDialog(); // Opens file dialog to select JSON file
+    void loadNextPosition(); // Load next position from JSON
+    void loadPreviousPosition(); // Load previous position from JSON
 
     // UI Rendering Methods
     void RenderAlwaysOnTop();
