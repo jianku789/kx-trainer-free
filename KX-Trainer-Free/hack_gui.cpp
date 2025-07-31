@@ -5,6 +5,7 @@
 #include "key_utils.h"
 #include <fstream>
 #include "nlohmann/json.hpp"
+#include "tinyxml2/tinyxml2.h"
 
 #include "imgui/imgui.h"
 #include "imgui/imgui_internal.h"
@@ -220,6 +221,28 @@ void HackGUI::loadNextPosition()
     }
 }
 
+void HackGUI::openXmlFileDialog()
+{
+    OPENFILENAMEA ofn;
+    char szFile[260] = { 0 };
+
+    ZeroMemory(&ofn, sizeof(ofn));
+    ofn.lStructSize = sizeof(ofn);
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = sizeof(szFile);
+    ofn.lpstrFilter = "XML Files\0*.xml\0All Files\0*.*\0";
+    ofn.nFilterIndex = 1;
+    ofn.lpstrInitialDir = "d:/code_C++/kx-trainer-free/Maps";
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+
+    if (GetOpenFileNameA(&ofn) == TRUE)
+    {
+        m_currentXmlFilePath = ofn.lpstrFile;
+        m_selectedXmlPositionIndex = 0; // Reset position index when loading new file
+        loadXmlPositions(m_currentXmlFilePath);
+    }
+}
+
 void HackGUI::loadPreviousPosition()
  {
      if (m_jsonPositions.empty())
@@ -239,6 +262,42 @@ void HackGUI::loadPreviousPosition()
          m_hack.loadPositionFromCoordinates(pos.x, pos.y, pos.z);
      }
  }
+
+void HackGUI::loadNextXmlPosition()
+{
+    if (m_xmlPositions.empty())
+    {
+        return;
+    }
+
+    // 否则按正常逻辑加载下一个位置
+    if (m_selectedXmlPositionIndex < static_cast<int>(m_xmlPositions.size()) - 1) {
+        m_selectedXmlPositionIndex++;
+        const auto& pos = m_xmlPositions[m_selectedXmlPositionIndex];
+        m_hack.loadPositionFromCoordinates(pos.x, pos.y, pos.z);
+    }
+}
+
+void HackGUI::loadPreviousXmlPosition()
+{
+    if (m_xmlPositions.empty())
+    {
+        return;
+    }
+
+    if (m_selectedXmlPositionIndex == 0) {
+        const auto& pos = m_xmlPositions[m_selectedXmlPositionIndex];
+        m_hack.loadPositionFromCoordinates(pos.x, pos.y, pos.z);
+        return;
+    }
+
+    // 不循环到最后一个位置
+    if (m_selectedXmlPositionIndex > 0) {
+        m_selectedXmlPositionIndex--;
+        const auto& pos = m_xmlPositions[m_selectedXmlPositionIndex];
+        m_hack.loadPositionFromCoordinates(pos.x, pos.y, pos.z);
+    }
+}
 
 bool HackGUI::loadJsonPositions(const std::string& filePath)
 {
@@ -276,6 +335,55 @@ bool HackGUI::loadJsonPositions(const std::string& filePath)
         return false;
     }
 }
+
+
+
+bool HackGUI::loadXmlPositions(const std::string& filePath)
+{
+    tinyxml2::XMLDocument doc;
+    if (doc.LoadFile(filePath.c_str()) != tinyxml2::XML_SUCCESS) {
+        return false;
+    }
+    
+    tinyxml2::XMLElement* overlayData = doc.FirstChildElement("OverlayData");
+    if (!overlayData) {
+        return false;
+    }
+    
+    tinyxml2::XMLElement* poisElement = overlayData->FirstChildElement("POIs");
+    if (!poisElement) {
+        return false;
+    }
+    
+    // Clear existing positions
+    m_xmlPositions.clear();
+    
+    // Iterate through all POI elements
+    for (tinyxml2::XMLElement* poiElement = poisElement->FirstChildElement("POI"),int i = 0;
+         poiElement != nullptr;
+         poiElement = poiElement->NextSiblingElement("POI"), i++) {
+        // Extract attributes
+        int mapID = poiElement->IntAttribute("MapID");
+        float xpos = poiElement->FloatAttribute("xpos");
+        float ypos = poiElement->FloatAttribute("ypos");
+        float zpos = poiElement->FloatAttribute("zpos");
+        const char* guid = poiElement->Attribute("GUID");
+        
+        // Create an XmlPosition struct and add it to the vector
+        XmlPosition pos;
+        pos.x = xpos;
+        pos.y = ypos;
+        pos.z = zpos;
+        pos.name = std::to_string(i);
+        
+        m_xmlPositions.push_back(pos);
+    }
+    
+    return true;
+}
+
+
+
 
 // Renders the collapsible section with toggle checkboxes
 void HackGUI::RenderTogglesSection() {
@@ -372,6 +480,61 @@ void HackGUI::RenderActionsSection() {
         // 显示当前加载位置的名称
         if (m_selectedPositionIndex >= 0 && m_selectedPositionIndex < static_cast<int>(m_jsonPositions.size())) {
             ImGui::Text("Current Position: %s", m_jsonPositions[m_selectedPositionIndex].name.c_str());
+        }
+        
+        ImGui::Spacing();
+        
+        // XML文件选择按钮
+        if (ImGui::Button("Select XML File", ImVec2(-1.0f, 0)))
+        {
+            openXmlFileDialog();
+        }
+        
+        // 显示当前选中的XML文件路径
+        ImGui::Text("Current XML: %s", m_currentXmlFilePath.c_str());
+        
+        // XML位置选择
+        ImGui::Text("XML Position:");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(200.0f); // 增加宽度以显示完整名称
+        
+        // 构建XML位置选择下拉菜单
+        std::string xmlComboItems;
+        for (size_t i = 0; i < m_xmlPositions.size(); ++i) {
+            const auto& pos = m_xmlPositions[i];
+            std::string displayName = pos.name;
+            if (displayName.empty()) {
+                displayName = "[Unnamed Position " + std::to_string(i) + "]";
+            }
+            xmlComboItems += displayName;
+            xmlComboItems += '\0';
+        }
+        xmlComboItems += '\0'; // 结束标记
+        
+        ImGui::Combo("##XmlPositionSlot", &m_selectedXmlPositionIndex, xmlComboItems.c_str());
+        
+        // XML多位置加载按钮
+        if (ImGui::Button("Load Selected XML Position", ImVec2(-150.0f, 0))) { 
+            if (m_selectedXmlPositionIndex >= 0 && m_selectedXmlPositionIndex < m_xmlPositions.size()) {
+                const auto& pos = m_xmlPositions[m_selectedXmlPositionIndex];
+                m_hack.loadPositionFromCoordinates(pos.x, pos.y, pos.z);
+            }
+        }
+        
+        // 上一个/下一个XML位置按钮
+        ImGui::SameLine();
+        if (ImGui::Button("Previous XML", ImVec2(70.0f, 0))) {
+            loadPreviousXmlPosition();
+        }
+        
+        ImGui::SameLine();
+        if (ImGui::Button("Next XML", ImVec2(70.0f, 0))) {
+            loadNextXmlPosition();
+        }
+        
+        // 显示当前加载的XML位置名称
+        if (m_selectedXmlPositionIndex >= 0 && m_selectedXmlPositionIndex < static_cast<int>(m_xmlPositions.size())) {
+            ImGui::Text("Current XML Position: %s", m_xmlPositions[m_selectedXmlPositionIndex].name.c_str());
         }
         
         ImGui::Spacing();
